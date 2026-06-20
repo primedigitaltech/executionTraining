@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="赢在执行" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>《赢在执行》专项培训心得体会电子书</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="manifest" href="./manifest.webmanifest?v=4" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="icon" href="./icons/icon-192.png" />
     <link rel="stylesheet" href="./styles.css" />
@@ -89,17 +89,18 @@
               <li>用 Chrome 或 Edge 打开电子书链接。</li>
               <li>如出现提示，点击“安装应用”。</li>
               <li>如果没有提示，点右上角菜单。</li>
-              <li>选择“安装应用”或“添加到主屏幕”。</li>
+              <li>选择“安装应用”“添加到主屏幕”或“添加到手机”。</li>
             </ol>
+            <p>如果菜单里没有这些选项，请复制链接到 Chrome 或 Edge 打开；微信、企业微信和部分国产浏览器可能不提供 PWA 安装入口。Edge 不一定主动弹出提示，可通过菜单手动添加。</p>
           </section>
         </div>
         <div class="offline-note">
-          首次打开需要联网。页面资源缓存后，后续可离线浏览已缓存的电子书内容。
+          首次打开需要联网。应用只缓存基础界面，电子书页面在阅读时按需加载，避免手机浏览器一次性缓存过多资源导致卡顿。
         </div>
       </div>
     </div>
 
-    <script src="./ebook-data.js"></script>
-    <script src="./app.js"></script>
+    <script src="./ebook-data.js?v=4"></script>
+    <script src="./app.js?v=4"></script>
   </body>
 </html>

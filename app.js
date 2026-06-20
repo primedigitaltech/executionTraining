@@ -7,6 +7,7 @@ const rightPage = document.getElementById("rightPage");
 const tocPanel = document.getElementById("tocPanel");
 const tocList = document.getElementById("tocList");
 const pageIndicator = document.getElementById("pageIndicator");
+const progressTrack = document.querySelector(".progress");
 const progressBar = document.getElementById("progressBar");
 const zoomRange = document.getElementById("zoomRange");
 const installBtn = document.getElementById("installBtn");
@@ -14,8 +15,9 @@ const installGuide = document.getElementById("installGuide");
 const closeInstallGuideBtn = document.getElementById("closeInstallGuideBtn");
 
 let currentPage = 1;
-let isAnimating = false;
-let touchStartX = 0;
+let pointerStartX = 0;
+let pointerStartY = 0;
+let lastPointerActionAt = 0;
 let deferredInstallPrompt = null;
 
 function isStandaloneApp() {
@@ -64,22 +66,6 @@ function render() {
   progressBar.style.width = `${(left / pageCount) * 100}%`;
 }
 
-function imageReady(src) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = resolve;
-    img.onerror = resolve;
-    img.src = src;
-  });
-}
-
-async function prepareSpread(page) {
-  const [left, right] = spreadFor(page);
-  const images = [imageReady(pageSrc(left))];
-  if (right) images.push(imageReady(pageSrc(right)));
-  await Promise.all(images);
-}
-
 function playTurn(direction) {
   const cls = direction === "back" ? "turn-back" : "turn-forward";
   book.classList.remove("turn-back", "turn-forward");
@@ -87,15 +73,12 @@ function playTurn(direction) {
   book.classList.add(cls);
   window.setTimeout(() => {
     book.classList.remove(cls);
-    isAnimating = false;
   }, 430);
 }
 
-async function goTo(page, direction = "forward", force = false) {
+function goTo(page, direction = "forward", force = false) {
   const target = normalizeTarget(page);
-  if ((target === currentPage && !force) || isAnimating) return;
-  isAnimating = true;
-  await prepareSpread(target);
+  if (target === currentPage && !force) return;
   currentPage = target;
   render();
   preloadAround(currentPage);
@@ -170,6 +153,14 @@ document.getElementById("lastBtn").addEventListener("click", () => goTo(pageCoun
 document.getElementById("tocBtn").addEventListener("click", () => tocPanel.classList.toggle("open"));
 document.getElementById("closeTocBtn").addEventListener("click", () => tocPanel.classList.remove("open"));
 
+progressTrack.addEventListener("click", (event) => {
+  const rect = progressTrack.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  const target = Math.round(1 + ratio * (pageCount - 1));
+  const direction = target < currentPage ? "back" : "forward";
+  goTo(target, direction, true);
+});
+
 document.getElementById("fullscreenBtn").addEventListener("click", async () => {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen?.();
@@ -191,22 +182,41 @@ window.addEventListener("keydown", (event) => {
 });
 
 book.addEventListener("click", (event) => {
+  if (Date.now() - lastPointerActionAt < 450) return;
   const rect = book.getBoundingClientRect();
   const x = event.clientX - rect.left;
   if (x > rect.width / 2) next();
   else prev();
 });
 
-book.addEventListener("touchstart", (event) => {
-  touchStartX = event.changedTouches[0].clientX;
-}, { passive: true });
+book.addEventListener("pointerdown", (event) => {
+  pointerStartX = event.clientX;
+  pointerStartY = event.clientY;
+});
 
-book.addEventListener("touchend", (event) => {
-  const delta = event.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(delta) < 38) return;
-  if (delta < 0) next();
-  else prev();
-}, { passive: true });
+book.addEventListener("pointerup", (event) => {
+  if (event.pointerType === "mouse") return;
+  const dx = event.clientX - pointerStartX;
+  const dy = event.clientY - pointerStartY;
+  if (Math.abs(dy) > 60 && Math.abs(dy) > Math.abs(dx)) return;
+
+  if (Math.abs(dx) > 32) {
+    lastPointerActionAt = Date.now();
+    if (dx < 0) next();
+    else prev();
+    event.preventDefault();
+    return;
+  }
+
+  if (Math.abs(dx) < 14 && Math.abs(dy) < 14) {
+    const rect = book.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    lastPointerActionAt = Date.now();
+    if (x > rect.width / 2) next();
+    else prev();
+    event.preventDefault();
+  }
+});
 
 window.addEventListener("resize", () => {
   currentPage = normalizeTarget(currentPage);
@@ -236,9 +246,16 @@ window.addEventListener("appinstalled", () => {
 });
 
 if ("serviceWorker" in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js")
+      .register("./service-worker.js?v=4")
       .then((registration) => registration.update())
       .catch((error) => {
         console.warn("Service worker registration failed", error);

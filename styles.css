@@ -264,6 +264,8 @@ p {
   transform-origin: center center;
   perspective: 2000px;
   transition: transform 0.22s ease;
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .book.single {
@@ -490,6 +492,8 @@ p {
   border-radius: 999px;
   background: rgba(0, 75, 141, 0.12);
   overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 #progressBar {

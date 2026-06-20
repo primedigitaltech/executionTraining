@@ -1,5 +1,4 @@
-const CACHE_NAME = "execution-ebook-pwa-v2";
-const PAGE_COUNT = 77;
+const CACHE_NAME = "execution-ebook-pwa-v4";
 
 const shellAssets = [
   "./",
@@ -10,20 +9,12 @@ const shellAssets = [
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png",
-  "./assets/执行力心得体会汇编.pdf"
+  "./icons/apple-touch-icon.png"
 ];
-
-const pageAssets = Array.from({ length: PAGE_COUNT }, (_, index) => {
-  return `./pages/page-${String(index + 1).padStart(3, "0")}.webp`;
-});
 
 async function cacheAll() {
   const cache = await caches.open(CACHE_NAME);
-  await cache.addAll(shellAssets);
-  pageAssets.forEach((asset) => {
-    cache.add(asset).catch(() => {});
-  });
+  await Promise.all(shellAssets.map((asset) => cache.add(asset).catch(() => undefined)));
 }
 
 self.addEventListener("install", (event) => {
@@ -38,10 +29,38 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+async function cachedFallback(request) {
+  const exact = await caches.match(request);
+  if (exact) return exact;
+
+  const url = new URL(request.url);
+  if (url.search) {
+    url.search = "";
+    const withoutQuery = await caches.match(url.toString());
+    if (withoutQuery) return withoutQuery;
+  }
+
+  if (request.mode === "navigate") {
+    return caches.match("./index.html");
+  }
+
+  return undefined;
+}
+
+async function fetchAndCache(request) {
+  const response = await fetch(request);
+  if (response && response.ok) {
+    const copy = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+  }
+  return response;
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   const isShell =
+    event.request.mode === "navigate" ||
     url.pathname.endsWith("/") ||
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/app.js") ||
@@ -51,25 +70,16 @@ self.addEventListener("fetch", (event) => {
 
   if (isShell) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
+      fetchAndCache(event.request)
+        .catch(() => cachedFallback(event.request))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    cachedFallback(event.request).then((cached) => {
       if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      });
+      return fetchAndCache(event.request);
     })
   );
 });
