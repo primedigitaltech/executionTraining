@@ -10,11 +10,19 @@ const pageIndicator = document.getElementById("pageIndicator");
 const progressBar = document.getElementById("progressBar");
 const zoomRange = document.getElementById("zoomRange");
 const installBtn = document.getElementById("installBtn");
+const installGuide = document.getElementById("installGuide");
+const closeInstallGuideBtn = document.getElementById("closeInstallGuideBtn");
 
 let currentPage = 1;
 let isAnimating = false;
 let touchStartX = 0;
 let deferredInstallPrompt = null;
+
+function isStandaloneApp() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+installBtn.hidden = isStandaloneApp();
 
 function pageSrc(page) {
   return `./pages/page-${String(page).padStart(3, "0")}.webp`;
@@ -56,21 +64,48 @@ function render() {
   progressBar.style.width = `${(left / pageCount) * 100}%`;
 }
 
-function goTo(page, direction = "forward") {
-  const target = normalizeTarget(page);
-  if (target === currentPage || isAnimating) return;
-  isAnimating = true;
+function imageReady(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = resolve;
+    img.onerror = resolve;
+    img.src = src;
+  });
+}
+
+async function prepareSpread(page) {
+  const [left, right] = spreadFor(page);
+  const images = [imageReady(pageSrc(left))];
+  if (right) images.push(imageReady(pageSrc(right)));
+  await Promise.all(images);
+}
+
+function playTurn(direction) {
   const cls = direction === "back" ? "turn-back" : "turn-forward";
+  book.classList.remove("turn-back", "turn-forward");
+  void book.offsetWidth;
   book.classList.add(cls);
-  window.setTimeout(() => {
-    currentPage = target;
-    render();
-    preloadAround(currentPage);
-  }, 160);
   window.setTimeout(() => {
     book.classList.remove(cls);
     isAnimating = false;
   }, 430);
+}
+
+async function goTo(page, direction = "forward", force = false) {
+  const target = normalizeTarget(page);
+  if ((target === currentPage && !force) || isAnimating) return;
+  isAnimating = true;
+  await prepareSpread(target);
+  currentPage = target;
+  render();
+  preloadAround(currentPage);
+  playTurn(direction);
+}
+
+function jumpToPhysicalPage(page) {
+  const target = normalizeTarget(page);
+  const direction = target < currentPage ? "back" : "forward";
+  goTo(target, direction, true);
 }
 
 function next() {
@@ -121,7 +156,7 @@ function buildToc() {
       `;
       item.addEventListener("click", () => {
         tocPanel.classList.remove("open");
-        goTo(entry.physicalPage, entry.physicalPage < currentPage ? "back" : "forward");
+        jumpToPhysicalPage(entry.physicalPage);
       });
       tocList.appendChild(item);
     });
@@ -185,11 +220,14 @@ window.addEventListener("beforeinstallprompt", (event) => {
 });
 
 installBtn.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  installBtn.hidden = true;
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+    return;
+  }
+  installGuide.hidden = false;
 });
 
 window.addEventListener("appinstalled", () => {
@@ -199,11 +237,22 @@ window.addEventListener("appinstalled", () => {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch((error) => {
-      console.warn("Service worker registration failed", error);
-    });
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then((registration) => registration.update())
+      .catch((error) => {
+        console.warn("Service worker registration failed", error);
+      });
   });
 }
+
+closeInstallGuideBtn.addEventListener("click", () => {
+  installGuide.hidden = true;
+});
+
+installGuide.addEventListener("click", (event) => {
+  if (event.target === installGuide) installGuide.hidden = true;
+});
 
 buildToc();
 render();

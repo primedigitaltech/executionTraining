@@ -67,6 +67,38 @@
       </main>
     </div>
 
+    <div id="installGuide" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+        <button id="closeInstallGuideBtn" class="modal-close" aria-label="关闭">×</button>
+        <h2 id="installTitle">安装到手机桌面</h2>
+        <p class="modal-lead">它本质上是一个网页，但可以像 App 一样从手机桌面打开。</p>
+        <div class="guide-grid">
+          <section>
+            <h3>iPhone / iPad</h3>
+            <ol>
+              <li>用 Safari 打开电子书链接。</li>
+              <li>点击底部或顶部的“分享”按钮。</li>
+              <li>选择“添加到主屏幕”。</li>
+              <li>确认名称，例如“赢在执行”。</li>
+            </ol>
+            <p>注意：微信内置浏览器通常不支持完整安装，请用 Safari 打开。</p>
+          </section>
+          <section>
+            <h3>安卓手机</h3>
+            <ol>
+              <li>用 Chrome 或 Edge 打开电子书链接。</li>
+              <li>如出现提示，点击“安装应用”。</li>
+              <li>如果没有提示，点右上角菜单。</li>
+              <li>选择“安装应用”或“添加到主屏幕”。</li>
+            </ol>
+          </section>
+        </div>
+        <div class="offline-note">
+          首次打开需要联网。页面资源缓存后，后续可离线浏览已缓存的电子书内容。
+        </div>
+      </div>
+    </div>
+
     <script src="./ebook-data.js"></script>
     <script src="./app.js"></script>
   </body>
