@@ -81,7 +81,6 @@ function goTo(page, direction = "forward", force = false) {
   if (target === currentPage && !force) return;
   currentPage = target;
   render();
-  preloadAround(currentPage);
   playTurn(direction);
 }
 
@@ -99,18 +98,6 @@ function next() {
 function prev() {
   const step = isNarrow() || currentPage <= 2 ? 1 : 2;
   goTo(currentPage - step, "back");
-}
-
-function preload(page) {
-  if (page < 1 || page > pageCount) return;
-  const img = new Image();
-  img.src = pageSrc(page);
-}
-
-function preloadAround(page) {
-  for (let offset = -4; offset <= 6; offset += 1) {
-    preload(page + offset);
-  }
 }
 
 function buildToc() {
@@ -255,7 +242,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=4")
+      .register("./service-worker.js?v=5")
       .then((registration) => registration.update())
       .catch((error) => {
         console.warn("Service worker registration failed", error);
@@ -273,4 +260,3 @@ installGuide.addEventListener("click", (event) => {
 
 buildToc();
 render();
-preloadAround(1);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "execution-ebook-pwa-v4";
+const CACHE_NAME = "execution-ebook-pwa-v5";
 
 const shellAssets = [
   "./",
@@ -76,10 +76,5 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    cachedFallback(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetchAndCache(event.request);
-    })
-  );
+  event.respondWith(fetch(event.request));
 });
