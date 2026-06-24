@@ -13,7 +13,7 @@ const zoomRange = document.getElementById("zoomRange");
 const installBtn = document.getElementById("installBtn");
 const installGuide = document.getElementById("installGuide");
 const closeInstallGuideBtn = document.getElementById("closeInstallGuideBtn");
-const ASSET_VERSION = "v7";
+const ASSET_VERSION = "v8";
 
 let currentPage = 1;
 let pointerStartX = 0;
@@ -104,8 +104,9 @@ function prev() {
 function buildToc() {
   const groups = new Map();
   data.entries.forEach((entry) => {
-    if (!groups.has(entry.department)) groups.set(entry.department, []);
-    groups.get(entry.department).push(entry);
+    const groupName = entry.grade ? `${entry.grade}档` : entry.department;
+    if (!groups.has(groupName)) groups.set(groupName, []);
+    groups.get(groupName).push(entry);
   });
 
   groups.forEach((items, department) => {
@@ -240,7 +241,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=7")
+      .register("./service-worker.js?v=8")
       .then((registration) => registration.update())
       .catch((error) => {
         console.warn("Service worker registration failed", error);
