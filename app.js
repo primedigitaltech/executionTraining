@@ -13,7 +13,7 @@ const zoomRange = document.getElementById("zoomRange");
 const installBtn = document.getElementById("installBtn");
 const installGuide = document.getElementById("installGuide");
 const closeInstallGuideBtn = document.getElementById("closeInstallGuideBtn");
-const ASSET_VERSION = "v8";
+const ASSET_VERSION = "v9";
 
 let currentPage = 1;
 let pointerStartX = 0;
@@ -102,33 +102,22 @@ function prev() {
 }
 
 function buildToc() {
-  const groups = new Map();
   data.entries.forEach((entry) => {
-    const groupName = entry.grade ? `${entry.grade}档` : entry.department;
-    if (!groups.has(groupName)) groups.set(groupName, []);
-    groups.get(groupName).push(entry);
-  });
-
-  groups.forEach((items, department) => {
-    const heading = document.createElement("div");
-    heading.className = "toc-dept";
-    heading.textContent = department;
-    tocList.appendChild(heading);
-
-    items.forEach((entry) => {
-      const item = document.createElement("button");
-      item.className = "toc-item";
-      item.type = "button";
-      item.innerHTML = `
-        <span class="toc-page">${String(entry.articlePage).padStart(2, "0")}</span>
+    const item = document.createElement("button");
+    item.className = "toc-item";
+    item.type = "button";
+    item.innerHTML = `
+      <span class="toc-page">${String(entry.articlePage).padStart(2, "0")}</span>
+      <span class="toc-entry-main">
         <span class="toc-name">${entry.name}</span>
-      `;
-      item.addEventListener("click", () => {
-        tocPanel.classList.remove("open");
-        jumpToPhysicalPage(entry.physicalPage);
-      });
-      tocList.appendChild(item);
+        <span class="toc-department">${entry.department}</span>
+      </span>
+    `;
+    item.addEventListener("click", () => {
+      tocPanel.classList.remove("open");
+      jumpToPhysicalPage(entry.physicalPage);
     });
+    tocList.appendChild(item);
   });
 }
 
@@ -241,7 +230,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=8")
+      .register("./service-worker.js?v=9")
       .then((registration) => registration.update())
       .catch((error) => {
         console.warn("Service worker registration failed", error);

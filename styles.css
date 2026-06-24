@@ -195,16 +195,6 @@ p {
   font-weight: 700;
 }
 
-.toc-dept {
-  margin: 14px 0 6px;
-  padding: 6px 9px;
-  border-radius: 6px;
-  background: #eaf6ff;
-  color: var(--deep-blue);
-  font-size: 13px;
-  font-weight: 800;
-}
-
 .toc-item {
   width: 100%;
   display: grid;
@@ -229,10 +219,27 @@ p {
   font-weight: 800;
 }
 
+.toc-entry-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
 .toc-name {
   color: var(--ink);
   font-size: 13px;
   font-weight: 800;
+}
+
+.toc-department {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reader-wrap {

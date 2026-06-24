@@ -1,4 +1,4 @@
-const CACHE_NAME = "execution-ebook-pwa-v8";
+const CACHE_NAME = "execution-ebook-pwa-v9";
 
 const shellAssets = [
   "./",
