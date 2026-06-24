@@ -208,7 +208,7 @@ p {
 .toc-item {
   width: 100%;
   display: grid;
-  grid-template-columns: 30px 1fr;
+  grid-template-columns: 34px 1fr;
   gap: 8px;
   padding: 7px 6px;
   border: 0;
@@ -229,17 +229,10 @@ p {
   font-weight: 800;
 }
 
-.toc-title {
-  display: block;
-  font-size: 12px;
+.toc-name {
+  color: var(--ink);
+  font-size: 13px;
   font-weight: 800;
-}
-
-.toc-meta {
-  display: block;
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 11px;
 }
 
 .reader-wrap {

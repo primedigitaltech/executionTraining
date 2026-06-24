@@ -13,6 +13,7 @@ const zoomRange = document.getElementById("zoomRange");
 const installBtn = document.getElementById("installBtn");
 const installGuide = document.getElementById("installGuide");
 const closeInstallGuideBtn = document.getElementById("closeInstallGuideBtn");
+const ASSET_VERSION = "v7";
 
 let currentPage = 1;
 let pointerStartX = 0;
@@ -27,7 +28,7 @@ function isStandaloneApp() {
 installBtn.hidden = isStandaloneApp();
 
 function pageSrc(page) {
-  return `./pages/page-${String(page).padStart(3, "0")}.webp`;
+  return `./pages/page-${String(page).padStart(3, "0")}.webp?${ASSET_VERSION}`;
 }
 
 function isNarrow() {
@@ -119,10 +120,7 @@ function buildToc() {
       item.type = "button";
       item.innerHTML = `
         <span class="toc-page">${String(entry.articlePage).padStart(2, "0")}</span>
-        <span>
-          <span class="toc-title">${entry.title}</span>
-          <span class="toc-meta">${entry.name}</span>
-        </span>
+        <span class="toc-name">${entry.name}</span>
       `;
       item.addEventListener("click", () => {
         tocPanel.classList.remove("open");
@@ -242,7 +240,7 @@ if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=5")
+      .register("./service-worker.js?v=7")
       .then((registration) => registration.update())
       .catch((error) => {
         console.warn("Service worker registration failed", error);
